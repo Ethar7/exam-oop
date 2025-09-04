@@ -1,0 +1,592 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Text.RegularExpressions;
+
+namespace Examination_System
+{
+    // ==============================
+    // Validator Class
+    // ==============================
+    
+    // de 5asa blvalidation 3la kol7aga 5asa blmt7an
+    public static class Validator
+    {
+        public static int IntValidation(string message, int minValue = 1, int maxValue = int.MaxValue)
+        {
+            
+            // func de bt3ml check 3la numbers zy stu_id sub_Id  btt4k this inthe range between min = 1 and max int range w message de 7taha 
+            // 3 7sb console hyread mnk eh fhtt5er 3la 7sabo 
+            Console.WriteLine(message);
+            do
+            {
+                if (int.TryParse(Console.ReadLine(), out int value) && value >= minValue && value <= maxValue)
+                    return value;
+
+                if (maxValue == int.MaxValue)
+                    Console.WriteLine($"Invalid Input!!!\nPlease {message} (integer >= {minValue})");
+                else
+                    Console.WriteLine($"Invalid Input!!!\nPlease {message} (integer between {minValue} and {maxValue})");
+            } while (true);
+        }
+        
+        // de bt3ml validation l7aga zy practical or final - msq or true false
+
+        public static int OneTwoValidation(string one, string two)
+        {
+            Console.WriteLine($"Enter 1 For {one} or 2 for {two}");
+            do
+            {
+                if (int.TryParse(Console.ReadLine(), out int value) && (value == 1 || value == 2))
+                    return value;
+                Console.WriteLine($"Invalid Input!!!\nPlease Enter 1 For {one} or 2 for {two}");
+            } while (true);
+        }
+        
+        // de lma tege t5tarmn l2mt7an wnta btmt7n bt5tar 3 7sb id l2gaba
+
+        public static int RightAnswerValidation(int size = 3)
+        {
+            Console.WriteLine($"Choose The Right Answer From 1 to {size}");
+            do
+            {
+                if (int.TryParse(Console.ReadLine(), out int value) && value > 0 && value <= size)
+                    return value;
+                Console.WriteLine($"Invalid Input!!!\nPlease Choose The Right Answer From 1 to {size}");
+            } while (true);
+        }
+
+        // ==============================
+        // AlphaNumeric Validation
+        // ==============================
+        
+        //debt3ml validation l7aga zy name lazm ykon 2rkam w 7rof lazm ykon m4 22l mn 2kbar mn 1 char w 2s5r mn 50  w 2rkam de default values
+        public static string AlphaNumericValidation(string message, int minLength = 1, int maxLength = 50)
+        {
+            Console.WriteLine(message);
+            do
+            {
+                string input = Console.ReadLine()?.Trim();
+                if (!string.IsNullOrEmpty(input))
+                {
+                    if (input.Length < minLength)
+                    {
+                        Console.WriteLine($"Input too short! Minimum length is {minLength}.");
+                        continue;
+                    }
+                    if (input.Length > maxLength)
+                    {
+                        Console.WriteLine($"Input too long! Maximum length is {maxLength}.");
+                        continue;
+                    }
+
+                    if (!Regex.IsMatch(input, @"^[a-zA-Z0-9]+$"))
+                    {
+                        Console.WriteLine("Invalid Input! Only letters (A-Z, a-z) and numbers (0-9) are allowed, no spaces or symbols.");
+                        continue;
+                    }
+
+                    return input;
+                }
+                Console.WriteLine("Input cannot be empty.");
+            } while (true);
+        }
+        //de btt4k lw question 2s5r mn 3 trfd 2w lw mafe4?
+        public static string QuestionBodyValidation(string message)
+        {
+            Console.WriteLine(message);
+            do
+            {
+                string input = Console.ReadLine();
+                if (!string.IsNullOrWhiteSpace(input))
+                {
+                    input = input.Trim();
+
+                    if (input.Length < 3)
+                    {
+                        Console.WriteLine("Invalid Input!!!\nQuestion must be at least 3 characters.");
+                        continue;
+                    }
+
+                    if (!input.EndsWith("?"))
+                    {
+                        Console.WriteLine("Invalid Question!!!\nQuestion must end with a '?'");
+                        continue;
+                    }
+
+                    return input;
+                }
+
+                Console.WriteLine($"Invalid Input!!!\nPlease {message} (no spaces or empty allowed)");
+            } while (true);
+        }
+
+        // ==============================
+        // Student ID Validation
+        // ==============================
+        public static int StudentIdValidation(string message)
+        {
+            
+            //mn func int validation 3mlt validation hna
+            return IntValidation(message, 1, 999999);
+        }
+    }
+
+    // ==============================
+    // Answer Class
+    // ==============================
+    public class Answer : ICloneable
+    {
+        
+        // de 5asa lma tege tktb egabat 3mlna implement l ICloneable w de feha 
+        // clone le httmg mben answertext w id 
+        private string answerText;
+
+        public int AnswerId { get; set; }
+
+        public string AnswerText
+        {
+            get => answerText;
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    throw new ArgumentException("Answer text cannot be empty or spaces only.");
+                answerText = value.Trim();
+            }
+        }
+
+        public Answer(int id, string text)
+        {
+            AnswerId = id;
+            AnswerText = text;
+        }
+
+        public object Clone() => new Answer(this.AnswerId, this.AnswerText);
+
+        public override string ToString() => $"{AnswerId}. {AnswerText}";
+    }
+
+    // ==============================
+    // Abstract Question Base Class
+    // ==============================
+    public abstract class Question : ICloneable, IComparable<Question>
+    {
+        
+        // de 7asa bno3 s2al hl hwa true false- practical     s2al nafso   draget s2al
+        private string header;
+        private string body;
+        private int mark;
+
+        public string Header
+        {
+            get => header;
+            protected set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    throw new ArgumentException("Question header cannot be empty or spaces only.");
+                header = value.Trim();
+            }
+        }
+
+        public string Body
+        {
+            get => body;
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    throw new ArgumentException("Question body cannot be empty.");
+
+                value = value.Trim();
+
+                if (value.Length < 3)
+                    throw new ArgumentException("Question must be at least 3 characters.");
+
+                if (!value.EndsWith("?"))
+                    throw new ArgumentException("Question must end with a '?'");
+
+                body = value;
+            }
+        }
+
+        public int Mark
+        {
+            get => mark;
+            set
+            {
+                if (value <= 0)
+                    throw new ArgumentException("Mark must be > 0.");
+                mark = value;
+            }
+        }
+        // by5zn s2al header body answer marks
+        public List<Answer> AnswerList { get; set; }
+        public Answer RightAnswer { get; set; }
+
+        protected Question(string header, string body, int mark)
+        {
+            Header = header;
+            Body = body;
+            Mark = mark;
+            AnswerList = new List<Answer>();
+        }
+
+        public abstract void ShowQuestion();
+
+        public object Clone()
+        {
+            Question copy = (Question)MemberwiseClone();
+            copy.AnswerList = new List<Answer>();
+            foreach (var ans in AnswerList)
+                copy.AnswerList.Add((Answer)ans.Clone());
+            return copy;
+        }
+
+        public int CompareTo(Question other) => this.Mark.CompareTo(other.Mark);
+
+        public override string ToString() => $" {Body} (Mark: {Mark})";
+    }
+
+    // ==============================
+    // True/False Question
+    // ==============================
+    public class TrueFalseQuestion : Question
+    {
+        public TrueFalseQuestion(string body, int mark, Answer rightAnswer)
+            : base("True or False", body, mark)
+        {
+            AnswerList.Add(new Answer(1, "True"));
+            AnswerList.Add(new Answer(2, "False"));
+            RightAnswer = (rightAnswer.AnswerId == 1) ? AnswerList[0] : AnswerList[1];
+        }
+
+        public override void ShowQuestion()
+        {
+            Console.WriteLine(this);
+            foreach (var ans in AnswerList)
+                Console.WriteLine(ans);
+        }
+    }
+
+    // ==============================
+    // MCQ Question
+    // ==============================
+    public class MCQQuestion : Question
+    {
+        public MCQQuestion(string body, int mark, List<Answer> answers, Answer rightAnswer)
+            : base("Choose the correct answer", body, mark)
+        {
+            if (answers == null || answers.Count < 2)
+                throw new ArgumentException("MCQ must have at least 2 answers.");
+
+            AnswerList = answers;
+            RightAnswer = rightAnswer;
+        }
+
+        public override void ShowQuestion()
+        {
+            Console.WriteLine(this);
+            foreach (var ans in AnswerList)
+                Console.WriteLine(ans);
+        }
+    }
+
+    // ==============================
+    // Exams
+    // ==============================
+    public abstract class Exam
+    {
+        public int Time { get; set; }
+        public int NumberOfQuestions { get; set; }
+        public List<Question> Questions { get; set; }
+
+        protected Exam(int time, int numberOfQuestions)
+        {
+            if (time <= 0) throw new ArgumentException("Time must be > 0.");
+            if (numberOfQuestions <= 0) throw new ArgumentException("Number of questions must be > 0.");
+
+            Time = time;
+            NumberOfQuestions = numberOfQuestions;
+            Questions = new List<Question>();
+        }
+
+        public abstract void ShowExam();
+    }
+
+    public class PracticalExam : Exam
+    {
+        public PracticalExam(int time, int numberOfQuestions) : base(time, numberOfQuestions) { }
+
+        public override void ShowExam()
+        {
+            Console.WriteLine($"--- Practical Exam --- (Time: {Time} min)");
+            foreach (var q in Questions)
+            {
+                q.ShowQuestion();
+                Console.WriteLine($"Correct Answer: {q.RightAnswer}\n");
+            }
+        }
+    }
+
+    public class FinalExam : Exam
+    {
+        public FinalExam(int time, int numberOfQuestions) : base(time, numberOfQuestions) { }
+
+        public override void ShowExam()
+        {
+            Console.WriteLine($"--- Final Exam --- (Time: {Time} min)");
+            int totalMark = 0;
+            foreach (var q in Questions)
+            {
+                q.ShowQuestion();
+                Console.WriteLine($"Correct Answer: {q.RightAnswer}");
+                totalMark += q.Mark;
+                Console.WriteLine();
+            }
+            Console.WriteLine($"Total Exam Marks: {totalMark}");
+        }
+    }
+
+    // ==============================
+    // Subject Class
+    // ==============================
+    public class Subject
+    {
+        private string subjectName;
+
+        public int SubjectId { get; set; }
+        public string SubjectName
+        {
+            get => subjectName;
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    throw new ArgumentException("Subject name cannot be empty or spaces only.");
+
+                value = value.Trim();
+
+                if (value.Length < 3)
+                    throw new ArgumentException("Subject name must be at least 3 characters.");
+
+                if (value.Length > 12)
+                {
+                    Console.WriteLine($"Subject name is too long. It will be truncated");
+                    value = value.Substring(0, 12);
+                }
+
+                subjectName = value;
+            }
+        }
+
+        public Exam SubjectExam { get; set; }
+
+        public Subject(int id, string name)
+        {
+            if (id <= 0) throw new ArgumentException("Subject id must be > 0.");
+            SubjectId = id;
+            SubjectName = name;
+        }
+
+        public void CreateExam(Exam exam)
+        {
+            SubjectExam = exam ?? throw new ArgumentNullException(nameof(exam));
+        }
+
+        public override string ToString() => $"Subject: {SubjectName} (ID: {SubjectId})";
+    }
+
+    // ==============================
+    // Program
+    // ==============================
+    public class Program
+    {
+        public static Subject CreateSubject()
+        {
+            int subjId = Validator.IntValidation("Enter Subject Id:(ID MUST BE >=1)");
+            while (true)
+            {
+                string subjName = Validator.AlphaNumericValidation("Enter Subject Name (letters & numbers only, 3-12 chars):", 3, 12);
+                try
+                {
+                    return new Subject(subjId, subjName);
+                }
+                catch (ArgumentException ex)
+                {
+                    Console.WriteLine($"Validation Error: {ex.Message}\nPlease re-enter subject name.\n");
+                }
+            }
+        }
+
+        public static Exam CreateExam()
+        {
+            int examType = Validator.OneTwoValidation("Final Exam", "Practical Exam");
+            int time = Validator.IntValidation("Enter Exam Time (minutes):", 1, 180);
+            int numQuestions = Validator.IntValidation("Enter Number of Questions:");
+
+            Exam exam;
+            if (examType == 1)
+                exam = new FinalExam(time, numQuestions);
+            else
+                exam = new PracticalExam(time, numQuestions);
+
+            AddQuestions(exam);
+            return exam;
+        }
+
+        public static void AddQuestions(Exam exam)
+        {
+            for (int i = 0; i < exam.NumberOfQuestions; i++)
+            {
+                Console.WriteLine($"\n--- Creating Question {i + 1} ---");
+                bool success = false;
+
+                while (!success)
+                {
+                    try
+                    {
+                        string body = Validator.QuestionBodyValidation("Enter Question Body (must end with '?'):");
+                        int mark = Validator.IntValidation("Enter Question Mark:");
+
+                        if (exam is FinalExam)
+                        {
+                            int qType = Validator.OneTwoValidation("True/False", "MCQ");
+
+                            if (qType == 1) // True/False
+                            {
+                                int right = Validator.OneTwoValidation("True", "False");
+                                Answer chosen = (right == 1) ? new Answer(1, "True") : new Answer(2, "False");
+                                exam.Questions.Add(new TrueFalseQuestion(body, mark, chosen));
+                            }
+                            else // MCQ
+                            {
+                                List<Answer> answers = new List<Answer>();
+                                for (int j = 1; j <= 4; j++)
+                                {
+                                    Console.WriteLine($"Enter Answer {j}:");
+                                    string ansText = Console.ReadLine()?.Trim();
+                                    if (string.IsNullOrWhiteSpace(ansText))
+                                        ansText = $"Answer{j}";
+                                    answers.Add(new Answer(j, ansText));
+                                }
+                                int right = Validator.RightAnswerValidation(answers.Count);
+                                exam.Questions.Add(new MCQQuestion(body, mark, answers, answers[right - 1]));
+                            }
+                        }
+                        else // Practical Exam (MCQ Only)
+                        {
+                            List<Answer> answers = new List<Answer>();
+                            for (int j = 1; j <= 3; j++)
+                            {
+                                Console.WriteLine($"Enter Answer {j}:");
+                                string ansText = Console.ReadLine()?.Trim();
+                                if (string.IsNullOrWhiteSpace(ansText))
+                                    ansText = $"Answer{j}";
+                                answers.Add(new Answer(j, ansText));
+                            }
+                            int right = Validator.RightAnswerValidation(answers.Count);
+                            exam.Questions.Add(new MCQQuestion(body, mark, answers, answers[right - 1]));
+                        }
+
+                        success = true;
+                    }
+                    catch (ArgumentException ex)
+                    {
+                        Console.WriteLine($"Validation Error: {ex.Message}\nPlease re-enter this question.\n");
+                    }
+                }
+            }
+        }
+
+        public static void ShowExamResult(Subject subject)
+        {
+            Console.WriteLine("\n=== Exam Created Successfully ===");
+            Console.WriteLine($"Subject ID: {subject.SubjectId}");
+            Console.WriteLine($"Subject Name: {subject.SubjectName}");
+            Console.WriteLine();
+            subject.SubjectExam.ShowExam();
+        }
+
+        // ==============================
+        // Attempt Exam Function
+        // ==============================
+        public static void AttemptExam(Exam exam, string studentName, string studentId, Subject subject)
+        {
+            Console.WriteLine($"\n=== Start Exam for {subject.SubjectName} (ID: {subject.SubjectId}) ===");
+            Console.WriteLine($"Time Allowed: {exam.Time} minutes\n");
+
+            int totalScore = 0;
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            for (int i = 0; i < exam.Questions.Count; i++)
+            {
+                var q = exam.Questions[i];
+                Console.WriteLine($"\nQuestion {i + 1}:");
+                q.ShowQuestion();
+
+                int answerInput = Validator.IntValidation($"Enter your answer (1-{q.AnswerList.Count}):", 1, q.AnswerList.Count);
+                Answer userAnswer = q.AnswerList[answerInput - 1];
+
+                Console.WriteLine($"Your Answer: {userAnswer}");
+                Console.WriteLine($"Correct Answer: {q.RightAnswer}");
+
+                if (userAnswer.AnswerId == q.RightAnswer.AnswerId)
+                {
+                    totalScore += q.Mark;
+                    Console.WriteLine("correct!\n");
+                }
+                else
+                {
+                    Console.WriteLine("wrong.\n");
+                }
+            }
+
+            stopwatch.Stop();
+            double elapsedMinutes = stopwatch.Elapsed.TotalMinutes;
+
+            Console.WriteLine("\n=== Exam Finished ===");
+            Console.WriteLine($"Student Name: {studentName}, Student ID: {studentId}");
+            Console.WriteLine($"Subject ID: {subject.SubjectId}");
+            Console.WriteLine($"Subject Name: {subject.SubjectName}");
+            Console.WriteLine($"Your Score: {totalScore}");
+            Console.WriteLine($"Time Taken: {elapsedMinutes:F2} minutes out of {exam.Time} minutes");
+
+            double percentage = (totalScore * 100.0) / GetTotalMarks(exam);
+            Console.WriteLine($"Your Percentage: {percentage:F2}%");
+
+            if (percentage >= 90)
+                Console.WriteLine("Excellent!");
+            else if (percentage >= 75)
+                Console.WriteLine("Very Good!");
+            else if (percentage >= 50)
+                Console.WriteLine("Good!");
+            else
+                Console.WriteLine("Needs Improvement!");
+        }
+
+        private static int GetTotalMarks(Exam exam)
+        {
+            int total = 0;
+            foreach (var q in exam.Questions)
+                total += q.Mark;
+            return total;
+        }
+
+        public static void Main()
+        {
+            Console.WriteLine("=== Examination System ===");
+
+            // Student Info
+            string studentName = Validator.AlphaNumericValidation("Enter Your Name (letters & numbers only, 3-20 chars):", 3, 20);
+            int studentId = Validator.StudentIdValidation("Enter Your Student ID (numeric > 0):");
+
+            Subject subject = CreateSubject();
+            Exam exam = CreateExam();
+
+            subject.CreateExam(exam);
+            ShowExamResult(subject);
+
+            // Attempt Exam
+            AttemptExam(exam, studentName, studentId.ToString(), subject);
+        }
+    }
+}
